@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/<your-username>/<repo-name>.git'
+                git branch: 'main', url: 'https://github.com/vinay-1729/task.git'
             }
         }
 
@@ -16,12 +16,28 @@ pipeline {
             }
         }
 
+        stage('Stop Old Container') {
+            steps {
+                script {
+                    sh '''
+                        docker ps -q --filter "name=my-static-site" | grep -q . && docker stop my-static-site && docker rm my-static-site || true
+                    '''
+                }
+            }
+        }
+
         stage('Run Container') {
             steps {
                 script {
-                    docker.image('my-static-site:latest').run('-d -p 8080:80')
+                    sh 'docker run -d --name my-static-site -p 8080:80 my-static-site:latest'
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished."
         }
     }
 }
